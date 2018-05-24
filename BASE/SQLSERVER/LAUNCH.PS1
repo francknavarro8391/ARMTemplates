@@ -1,0 +1,1 @@
+New-AzureRmResourceGroupDeployment -Name TEST93 -ResourceGroupName TEST -TemplateFile .\BASESQLSERVER.JSON -TemplateParameterFile .\PARAMETERS.JSON -Verbose

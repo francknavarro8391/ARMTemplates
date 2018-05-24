@@ -1,0 +1,359 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "secretadminUsername": {
+      "type" : "securestring",
+      "metadata" : {
+        "description" : "Secret URI for default Windows Admin account"
+      }
+    },
+    "secretadminPassword": {
+      "type" : "securestring",
+      "metadata" : {
+        "description" : "Secret URI for default Windows Admin password"
+      } 
+    },
+    "ouPath" : {
+      "type" : "string",
+      "defaultValue": "ou=dev,ou=servers,dc=tempdomaine,dc=local",
+      "allowedValues": [
+        "ou=dev,ou=servers,dc=tempdomaine,dc=local",
+        "ou=production,ou=servers,dc=tempdomaine,dc=local"
+      ],
+      "metadata" : {
+        "description" : "Organizational Unit to create the computer account"
+      }
+    },
+    "JoinDomainUsername" : {
+      "type" : "securestring",
+      "metadata" : {
+        "description" : "Secret URI for the service account to be used for the domain join process"
+      }
+    },
+    "JoinDomainPassword" : {
+    "type" : "securestring",
+      "metadata" : {
+        "description" : "Secret URI for the service account password to be used for the domain join process"
+      }
+    },
+    "imageOffer" : {
+      "type" : "string",
+      "defaultValue": "SQL2016SP2-WS2016",
+      "allowedValues": [
+        "SQL2008R2SP3-WS2008R2SP1",
+        "SQL2016SP2-WS2016",
+        "SQL2017-WS2016"
+      ],
+      "metadata" : {
+        "description" : "Windows + SQL Server instance to be deployed (limited list)"
+      }
+    },
+    "sqlImageSku" : {
+      "type" : "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Enterprise",
+        "Express",
+        "Standard",
+        "Web"
+      ],
+      "metadata" : {
+        "description" : "Windows + SQL Server instance to be deployed (limited list)"
+      }
+    },
+    "SubnetName": {
+      "type": "string",
+      "defaultValue": "backendSubnet",
+      "allowedValues": [
+        "frontendSubnet",
+        "backendSubnet"
+      ],
+      "metadata": {
+        "description": "Authorized subnet to be used for virtual machine deployment in Virtual Network"
+      }
+    },
+    "vmName" : {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine name to be deployed"
+      }
+    },
+    "vmsize" : {
+      "type" : "string",  
+      "defaultValue": "Standard_D4_v3",
+      "allowedValues": [
+        "Standard_D4_v3",
+        "Standard_D8_v3"
+      ],
+      "metadata": {
+        "description": "Virtual machine size to be deployed (limited to a VM list)."
+      }
+    },
+    "DiskType": {
+      "type" : "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Premium_LRS"
+      ],
+      "metadata": {
+      "description": "Virtual machine disk type (SATA/SSD)."
+      }
+    },
+    "DisplayName": {
+      "type": "string",
+      "metadata": {
+        "description": "Tag to group ressources of a same application."
+      }
+    },
+    "CostCenter": {
+      "type": "string",
+      "defaultValue": "IT",
+      "metadata": {
+        "description": "Tag to assign a cost center for billing purpose."
+      }
+    },
+    "Module": {
+      "type": "string",
+      "defaultValue": "IT",
+      "metadata": {
+        "description": "Tag to group multiple ressources composing a same tier in an application."
+      }
+    },
+    "Owner": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Tag email address of user responsible for the resource."
+      }
+    },
+    "Application": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Tag to group all ressources composing an application for all it's modules."
+      }
+    },
+    "Expiration": {
+      "type": "string",
+      "metadata": {
+        "description": "Tag to be used to set an expiration date on the resource.."
+      }
+    }
+  },
+  "variables": {
+    "imagePublisher": "MicrosoftSQLServer",
+    "nicName": "[concat(Parameters('vmName'),'_NIC1')]",
+    "ipconfig1_nic1": "[concat(Variables('nicName'),'_IP1')]",
+    "DataDisk1Size": 128,
+    "OSDiskName": "[concat(Parameters('vmName'),'_OSDISK')]",
+    "DataDisk1Name": "[concat(Parameters('vmName'),'_DATADISK1')]",
+    "DataDisk2Name": "[concat(Parameters('vmName'),'_DATADISK2')]",
+    "DataDisk3Name": "[concat(Parameters('vmName'),'_DATADISK3')]",
+    "VNETResourfeGroupName": "Management",
+    "virtualNetworkName": "ISOLATED_VNET",
+    "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
+    "domainToJoin": "TEMPDOMAINE.LOCAL",
+    "JoindomainJoinOptions" : 3
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-03-30",
+      "type": "Microsoft.Compute/disks",
+      "name": "[variables('DataDisk1Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "DisplayName": "[parameters('DisplayName')]",
+        "CostCenter": "[parameters('CostCenter')]",
+        "Module": "[parameters('Module')]",
+        "Owner": "[parameters('Owner')]",
+        "Application": "[parameters('Application')]",
+        "Expiration": "[parameters('Expiration')]"
+      },
+      "sku": {
+      "name": "[parameters('DiskType')]"
+      },
+      "properties": {
+        "creationData": {
+          "createOption": "Empty"
+      },
+      "diskSizeGB": "[variables('DataDisk1Size')]"
+    }
+  },
+  {
+    "apiVersion": "2017-03-30",
+    "type": "Microsoft.Compute/disks",
+    "name": "[variables('DataDisk2Name')]",
+    "location": "[resourceGroup().location]",
+    "tags": {
+      "DisplayName": "[parameters('DisplayName')]",
+      "CostCenter": "[parameters('CostCenter')]",
+      "Module": "[parameters('Module')]",
+      "Owner": "[parameters('Owner')]",
+      "Application": "[parameters('Application')]",
+      "Expiration": "[parameters('Expiration')]"
+    } ,
+    "sku": {
+    "name": "[parameters('DiskType')]"
+    },
+    "properties": {
+      "creationData": {
+        "createOption": "Empty"
+      },
+      "diskSizeGB": "[variables('DataDisk1Size')]"
+    }
+  },
+  {
+    "apiVersion": "2017-03-30",
+    "type": "Microsoft.Compute/disks",
+    "name": "[variables('DataDisk3Name')]",
+    "location": "[resourceGroup().location]",
+    "tags": {
+      "DisplayName": "[parameters('DisplayName')]",
+      "CostCenter": "[parameters('CostCenter')]",
+      "Module": "[parameters('Module')]",
+      "Owner": "[parameters('Owner')]",
+      "Application": "[parameters('Application')]",
+      "Expiration": "[parameters('Expiration')]"
+    },
+    "sku": {
+    "name": "[parameters('DiskType')]"
+    },
+    "properties": {
+      "creationData": {
+        "createOption": "Empty"
+    },
+    "diskSizeGB": "[variables('DataDisk1Size')]"
+  }
+},
+{
+  "apiVersion": "2015-06-15",
+  "type": "Microsoft.Network/networkInterfaces",
+  "name": "[variables('nicName')]",
+  "location": "[resourceGroup().location]",
+  "tags": {
+        "DisplayName": "[parameters('DisplayName')]",
+        "CostCenter": "[parameters('CostCenter')]",
+        "Module": "[parameters('Module')]",
+        "Owner": "[parameters('Owner')]",
+        "Application": "[parameters('Application')]",
+        "Expiration": "[parameters('Expiration')]"
+  },
+  "properties": {
+    "ipConfigurations": [
+    {
+      "name": "[variables('ipconfig1_nic1')]",
+      "properties": {
+        "privateIPAllocationMethod": "Dynamic",
+        "subnet": {
+          "id": "[Variables('subnetRef')]"
+        }
+      }
+    }
+    ]
+  }
+},
+{
+  "apiVersion": "2016-03-30",
+  "type": "Microsoft.Compute/virtualMachines/extensions",
+  "name": "[concat(parameters('vmName'),'/joindomain')]",
+  "location": "[resourceGroup().location]",
+  "dependsOn": [
+    "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+  ],
+  "properties": {
+    "publisher": "Microsoft.Compute",
+    "type": "JsonADDomainExtension",
+    "typeHandlerVersion": "1.3",
+    "autoUpgradeMinorVersion": true,
+    "settings": {
+      "Name": "[variables('domainToJoin')]",
+      "OUPath": "[parameters('ouPath')]",
+      "User": "[concat(variables('domainToJoin'), '\\', parameters('JoinDomainUsername'))]",
+      "Restart": "true",
+      "Options": "[Variables('JoindomainJoinOptions')]"
+    },
+    "protectedsettings": {
+      "Password": "[parameters('JoinDomainPassword')]"
+    }
+  }
+},
+{
+  "apiVersion": "2016-04-30-preview",
+  "type": "Microsoft.Compute/virtualMachines",
+  "name": "[parameters('vmName')]",
+  "location": "[resourceGroup().location]",
+  "tags": {
+    "DisplayName": "[parameters('DisplayName')]",
+    "CostCenter": "[parameters('CostCenter')]",
+    "Module": "[parameters('Module')]",
+    "Owner": "[parameters('Owner')]",
+    "Application": "[parameters('Application')]",
+    "Expiration": "[parameters('Expiration')]"
+  },
+  "dependsOn": [
+    "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]",
+    "[resourceId('Microsoft.Compute/disks/', variables('DataDisk1Name'))]",
+    "[resourceId('Microsoft.Compute/disks/', variables('DataDisk2Name'))]",
+    "[resourceId('Microsoft.Compute/disks/', variables('DataDisk3Name'))]"
+    ],
+    "properties": {
+      "hardwareProfile": {
+        "vmSize": "[parameters('vmSize')]"
+      },
+      "osProfile": {
+        "computerName": "[parameters('vmName')]",
+        "adminUsername": "[parameters('secretadminUsername')]",
+        "adminPassword": "[parameters('secretadminPassword')]"
+      },
+      "storageProfile": {
+        "imageReference": {
+          "publisher": "[variables('imagePublisher')]",
+          "offer": "[parameters('imageOffer')]",
+          "sku": "[parameters('sqlImageSku')]",
+          "version": "latest"
+        },
+        "dataDisks": [
+          {
+            "lun": 0,
+            "name": "[variables('DataDisk1Name')]",
+            "createOption": "Attach",
+            "managedDisk": {
+              "id": "[resourceId('Microsoft.Compute/disks/', variables('DataDisk1Name'))]"
+            }
+          },
+          {
+            "lun": 1,
+            "name": "[variables('DataDisk2Name')]",
+            "createOption": "Attach",
+            "managedDisk": {
+              "id": "[resourceId('Microsoft.Compute/disks/', variables('DataDisk2Name'))]"
+            }
+          },
+          {
+            "lun": 2,
+            "name": "[variables('DataDisk3Name')]",
+            "createOption": "Attach",
+            "managedDisk": {
+              "id": "[resourceId('Microsoft.Compute/disks/', variables('DataDisk3Name'))]"
+            }
+          }
+        ],
+          "osDisk": {
+            "createOption": "FromImage",
+            "name": "[Variables('OSDiskName')]"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "secretadminUsername": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+        },
+        "secretName": "WindowsDefaultAdminUserName"
+      }
+    },
+    "secretadminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+        },
+        "secretName": "WindowsDefaultAdminPassword"
+      }
+    },
+    "JoinDomainUsername" : {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+        },
+        "secretName": "WindowsJoinDomainUsername"
+      }
+    },
+    "JoinDomainPassword" : {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+        },
+        "secretName": "WindowsJoinDomainPassword"
+      }
+    }
+  }
+}
