@@ -62,6 +62,59 @@
         "description" : "Windows + SQL Server instance to be deployed (limited list)"
       }
     },
+
+    "sqlAuthenticationLogin": {
+      "type": "securestring",
+      "metadata": {
+        "description": "SQL Server Authentication Login Account Name"
+      }
+    },
+    "sqlAuthenticationPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "SQL Server Authentication Login Account Password"
+      }
+    },
+    "sqlConnectivityType": {
+      "type": "string",
+      "defaultValue": "Public",
+      "allowedValues": [
+        "Public",
+        "Private",
+        "Local"
+      ],
+      "metadata": {
+        "description": "SQL Server Virtual Machine SQL Connectivity Type"
+      }
+    },
+    "sqlPortNumber": {
+      "type": "int",
+      "metadata": {
+        "description": "SQL Server Virtual Machine SQL Port Number"
+      },
+      "defaultValue": 1433
+    },
+    "sqlStorageWorkloadType": {
+      "type": "string",
+      "metadata": {
+        "description": "SQL Server Virtual Machine Workload Type: GENERAL - general work load; DW - datawear house work load; OLTP - Transactional processing work load"
+      },
+      "allowedValues": [
+        "GENERAL",
+        "OLTP",
+        "DW"
+      ],
+      "defaultValue": "GENERAL"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+
+
     "SubnetName": {
       "type": "string",
       "defaultValue": "backendSubnet",
@@ -116,21 +169,18 @@
     },
     "Module": {
       "type": "string",
-      "defaultValue": "IT",
       "metadata": {
         "description": "Tag to group multiple ressources composing a same tier in an application."
       }
     },
     "Owner": {
       "type": "string",
-      "defaultValue": "",
       "metadata": {
         "description": "Tag email address of user responsible for the resource."
       }
     },
     "Application": {
       "type": "string",
-      "defaultValue": "",
       "metadata": {
         "description": "Tag to group all ressources composing an application for all it's modules."
       }
@@ -156,7 +206,8 @@
     "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
     "domainToJoin": "TEMPDOMAINE.LOCAL",
-    "JoindomainJoinOptions" : 3
+    "JoindomainJoinOptions" : 3,
+    "DataDiskCachingPolicy": "none"
   },
   "resources": [
     {
@@ -229,7 +280,7 @@
   }
 },
 {
-  "apiVersion": "2015-06-15",
+  "apiVersion": "2016-09-01",
   "type": "Microsoft.Network/networkInterfaces",
   "name": "[variables('nicName')]",
   "location": "[resourceGroup().location]",
@@ -252,7 +303,8 @@
         }
       }
     }
-    ]
+    ],
+    "enableAcceleratedNetworking": "true"
   }
 },
 {
@@ -280,6 +332,42 @@
     }
   }
 },
+{
+  "apiVersion": "2015-06-15",
+  "type": "Microsoft.Compute/virtualMachines/extensions",
+  "name": "[concat(parameters('vmName'), '/SqlIaasExtension')]",
+  "location": "[parameters('location')]",
+  "dependsOn": [
+      "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]",
+      "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'),'/extensions/joindomain')]"
+  ],
+  "properties": {
+      "type": "SqlIaaSAgent",
+      "publisher": "Microsoft.SqlServer.Management",
+      "typeHandlerVersion": "1.2",
+      "autoUpgradeMinorVersion": "true",
+      "settings": {
+          "AutoTelemetrySettings": {
+              "Region": "[parameters('location')]"
+          },
+          "ServerConfigurationsManagementSettings": {
+              "SQLConnectivityUpdateSettings": {
+                  "ConnectivityType": "[parameters('sqlConnectivityType')]",
+                  "Port": "[parameters('sqlPortNumber')]"
+              },
+              "SQLWorkloadTypeUpdateSettings": {
+                  "SQLWorkloadType": "[parameters('sqlStorageWorkloadType')]"
+              }
+          }
+      },
+      "protectedSettings": {
+          "SQLAuthUpdateUserName": "[parameters('sqlAuthenticationLogin')]",
+          "SQLAuthUpdatePassword": "[parameters('sqlAuthenticationPassword')]"
+      }
+  }
+},
+
+
 {
   "apiVersion": "2016-04-30-preview",
   "type": "Microsoft.Compute/virtualMachines",
@@ -320,6 +408,7 @@
             "lun": 0,
             "name": "[variables('DataDisk1Name')]",
             "createOption": "Attach",
+            "caching": "[variables('DataDiskCachingPolicy')]",
             "managedDisk": {
               "id": "[resourceId('Microsoft.Compute/disks/', variables('DataDisk1Name'))]"
             }
@@ -327,6 +416,7 @@
           {
             "lun": 1,
             "name": "[variables('DataDisk2Name')]",
+            "caching": "[variables('DataDiskCachingPolicy')]",
             "createOption": "Attach",
             "managedDisk": {
               "id": "[resourceId('Microsoft.Compute/disks/', variables('DataDisk2Name'))]"
@@ -335,6 +425,7 @@
           {
             "lun": 2,
             "name": "[variables('DataDisk3Name')]",
+            "caching": "[variables('DataDiskCachingPolicy')]",
             "createOption": "Attach",
             "managedDisk": {
               "id": "[resourceId('Microsoft.Compute/disks/', variables('DataDisk3Name'))]"
