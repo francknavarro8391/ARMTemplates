@@ -1,1 +1,1 @@
-New-AzureRmResourceGroupDeployment -Name TEST93 -ResourceGroupName TEST -TemplateFile .\BASESQLSERVER.JSON -TemplateParameterFile .\PARAMETERS.JSON -Verbose
+New-AzureRmResourceGroupDeployment -Name TEST93 -ResourceGroupName TEST -TemplateUri "https://raw.githubusercontent.com/ExploitationSMAG/ARMTemplates/master/BASE/SQLSERVER/BASESQLSERVER.JSON" -TemplateParameterUri "https://raw.githubusercontent.com/ExploitationSMAG/ARMTemplates/master/BASE/SQLSERVER/PARAMETERS.JSON" -Verbose
