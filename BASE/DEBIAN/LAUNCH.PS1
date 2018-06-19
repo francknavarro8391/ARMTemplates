@@ -1,1 +1,1 @@
-New-AzureRmResourceGroupDeployment -Name TEST93 -ResourceGroupName TEST08 -TemplateFile .\BASEDEBIAN.JSON -TemplateParameterFile .\PARAMETERS.JSON -Verbose
+New-AzureRmResourceGroupDeployment -Name TEST93 -ResourceGroupName TEST -TemplateUri "https://raw.githubusercontent.com/ExploitationSMAG/ARMTemplates/master/BASE/DEBIAN/BASEDEBIAN.JSON" -TemplateParameterUri "https://raw.githubusercontent.com/ExploitationSMAG/ARMTemplates/master/BASE/DEBIAN/PARAMETERS.JSON" -Verbose

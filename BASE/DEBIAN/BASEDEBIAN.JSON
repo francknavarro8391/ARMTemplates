@@ -99,7 +99,8 @@
     "virtualNetworkName": "ISOLATED_VNET",
     "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
-    "DataDiskCachingPolicy": "ReadWrite"
+    "DataDiskCachingPolicy": "ReadWrite",
+    "BootDiagnosticsSTorageAccount": "https://smagvmdiags.blob.core.windows.net"
   },
   "resources": [
     {
@@ -207,6 +208,12 @@
               "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
             }
           ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[Variables('BootDiagnosticsSTorageAccount')]"
+          }
         }
       }
     }
