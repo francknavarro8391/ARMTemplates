@@ -155,6 +155,7 @@
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
     "domainToJoin": "TEMPDOMAINE.LOCAL",
     "DataDiskCachingPolicy": "ReadWrite",
+    "BootDiagnosticsSTorageAccount": "https://smagvmdiags.blob.core.windows.net",
     "JoindomainJoinOptions" : 3
   },
   "resources": [
@@ -292,6 +293,12 @@
               "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
             }
           ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[Variables('BootDiagnosticsSTorageAccount')]"
+          }
         }
       }
     }

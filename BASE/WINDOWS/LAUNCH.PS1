@@ -1,1 +1,2 @@
-New-AzureRmResourceGroupDeployment -Name TEST93 -ResourceGroupName TEST -TemplateFile .\BASEWINDOWS.JSON -TemplateParameterFile .\PARAMETERS.JSON -Verbose
+New-AzureRmResourceGroupDeployment -Name TEST93 -ResourceGroupName TESTS -TemplateUri "https://raw.githubusercontent.com/ExploitationSMAG/ARMTemplates/master/BASE/WINDOWS/BASEWINDOWS.JSON
+-TemplateParameterUri "https://raw.githubusercontent.com/ExploitationSMAG/ARMTemplates/master/BASE/WINDOWS/PARAMETERS.JSON" -Verbose
