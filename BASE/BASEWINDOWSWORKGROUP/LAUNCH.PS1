@@ -1,0 +1,1 @@
+New-AzureRmResourceGroupDeployment -Name TEST93 -ResourceGroupName TESTSARM -TemplateFile .\BASEWINDOWSWORKGROUP.JSON -TemplateParameterFile .\PARAMETERS.JSON -Verbose

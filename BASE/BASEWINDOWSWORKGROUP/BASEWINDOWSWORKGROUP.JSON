@@ -1,0 +1,248 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "secretadminUsername": {
+      "type" : "securestring",
+      "metadata" : {
+        "description" : "Secret URI for default Windows Admin account"
+      }
+    },
+    "secretadminPassword": {
+      "type" : "securestring",
+      "metadata" : {
+        "description" : "Secret URI for default Windows Admin password"
+      } 
+    },
+    "windowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter",
+      "allowedValues": [
+        "2016-Datacenter",
+        "2012-R2-Datacenter"
+      ],
+      "metadata": {
+        "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version. Allowed values: 2016-datacenter, 2012-R2-Datacenter."
+      }
+    },
+    "SubnetName": {
+      "type": "string",
+      "defaultValue": "BackendSubnet",
+      "allowedValues": [
+        "BackendSubnet",
+        "FrontEndSubnet",
+        "DMZSubnet"
+      ],
+      "metadata": {
+        "description": "Authorized subnet to be used for virtual machine deployment in Virtual Network"
+      }
+    },
+    "vmName" : {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine name to be deployed"
+      }
+    },
+    "vmsize" : {
+      "type" : "string",  
+      "defaultValue": "Standard_A2_v2",
+      "allowedValues": [
+        "Standard_D4_v3",
+        "Standard_D8_v3",
+        "Standard_A2_v2",
+        "Standard_D16_v3",
+        "Standard_D2_v3"
+      ],
+      "metadata": {
+        "description": "Virtual machine size to be deployed (limited to a VM list)."
+      }
+    },
+    "DiskType": {
+      "type" : "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Premium_LRS"
+      ],
+      "metadata": {
+      "description": "Virtual machine disk type (SATA/SSD)."
+      }
+    },
+    "EnableAcceleratedNetworking": {
+      "type" : "string",
+      "defaultValue": "false",
+      "allowedValues": [
+        "false",
+        "true"
+      ],
+      "metadata": {
+      "description": "Enable Accelerated Networking support for VM supporting the feature."
+      }
+    },
+    "DisplayName": {
+      "type": "string",
+      "metadata": {
+        "description": "Tag to group ressources of a same application."
+      }
+    },
+    "CostCenter": {
+      "type": "string",
+      "defaultValue": "IT",
+      "metadata": {
+        "description": "Tag to assign a cost center for billing purpose."
+      }
+    },
+    "Module": {
+      "type": "string",
+      "metadata": {
+        "description": "Tag to group multiple ressources composing a same tier in an application."
+      }
+    },
+    "Owner": {
+      "type": "string",
+      "metadata": {
+        "description": "Tag email address of user responsible for the resource."
+      }
+    },
+    "Application": {
+      "type": "string",
+      "metadata": {
+        "description": "Tag to group all ressources composing an application for all it's modules."
+      }
+    },
+    "Expiration": {
+      "type": "string",
+      "metadata": {
+        "description": "Tag to be used to set an expiration date on the resource.."
+      }
+    }
+  },
+  "variables": {
+    "imagePublisher": "MicrosoftWindowsServer",
+    "imageOffer": "WindowsServer",
+    "nicName": "[concat(Parameters('vmName'),'_NIC1')]",
+    "ipconfig1_nic1": "[concat(Variables('nicName'),'_IP1')]",
+    "DataDisk1Size": 64,
+    "OSDiskName": "[concat(Parameters('vmName'),'_OSDISK')]",
+    "DataDisk1Name": "[concat(Parameters('vmName'),'_DATADISK1')]",
+    "VNETResourfeGroupName": "Management",
+    "virtualNetworkName": "SMAG_VNET",
+    "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
+    "DataDiskCachingPolicy": "ReadWrite"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-03-30",
+      "type": "Microsoft.Compute/disks",
+      "name": "[variables('DataDisk1Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "DisplayName": "[parameters('DisplayName')]",
+        "CostCenter": "[parameters('CostCenter')]",
+        "Module": "[parameters('Module')]",
+        "Owner": "[parameters('Owner')]",
+        "Application": "[parameters('Application')]",
+        "Expiration": "[parameters('Expiration')]"
+      },
+      "sku": {
+      "name": "[parameters('DiskType')]"
+      },
+      "properties": {
+        "creationData": {
+          "createOption": "Empty"
+      },
+      "diskSizeGB": "[variables('DataDisk1Size')]"
+  }
+},
+{
+  "apiVersion": "2016-09-01",
+  "type": "Microsoft.Network/networkInterfaces",
+  "name": "[variables('nicName')]",
+  "location": "[resourceGroup().location]",
+  "tags": {
+    "DisplayName": "[parameters('DisplayName')]",
+    "CostCenter": "[parameters('CostCenter')]",
+    "Module": "[parameters('Module')]",
+    "Owner": "[parameters('Owner')]",
+    "Application": "[parameters('Application')]",
+    "Expiration": "[parameters('Expiration')]"
+  },
+  "properties": {
+    "ipConfigurations": [
+      {
+        "name": "[variables('ipconfig1_nic1')]",
+        "properties": {
+        "privateIPAllocationMethod": "Dynamic",
+        "subnet": {
+            "id": "[Variables('subnetRef')]"
+          }
+        }
+      }
+    ],
+        "enableAcceleratedNetworking": "[parameters('EnableAcceleratedNetworking')]"
+  }
+},
+{
+  "apiVersion": "2016-04-30-preview",
+  "type": "Microsoft.Compute/virtualMachines",
+  "name": "[parameters('vmName')]",
+  "location": "[resourceGroup().location]",
+  "tags": {
+    "DisplayName": "[parameters('DisplayName')]",
+    "CostCenter": "[parameters('CostCenter')]",
+    "Module": "[parameters('Module')]",
+    "Owner": "[parameters('Owner')]",
+    "Application": "[parameters('Application')]",
+    "Expiration": "[parameters('Expiration')]"
+  },
+  "dependsOn": [
+    "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]",
+    "[resourceId('Microsoft.Compute/disks/', variables('DataDisk1Name'))]"
+  ],
+  "properties": {
+    "hardwareProfile": {
+      "vmSize": "[parameters('vmSize')]"
+    },
+    "osProfile": {
+      "computerName": "[parameters('vmName')]",
+      "adminUsername": "[parameters('secretadminUsername')]",
+      "adminPassword": "[parameters('secretadminPassword')]",
+      "windowsConfiguration": {
+        "provisionVmAgent": "true"
+      }
+    },
+    "storageProfile": {
+    "imageReference": {
+      "publisher": "[variables('imagePublisher')]",
+      "offer": "[variables('imageOffer')]",
+      "sku": "[parameters('windowsOSVersion')]",
+      "version": "latest"
+    },
+    "dataDisks": [
+      {
+        "lun": 0,
+        "name": "[variables('DataDisk1Name')]",
+        "createOption": "Attach",
+        "caching": "[variables('DataDiskCachingPolicy')]",
+        "managedDisk": {
+          "id": "[resourceId('Microsoft.Compute/disks/', variables('DataDisk1Name'))]"
+        }
+      }
+    ],
+    "osDisk": {
+      "createOption": "FromImage",
+      "name": "[Variables('OSDiskName')]"
+    }
+  },
+  "networkProfile": {
+    "networkInterfaces": [
+          {
+          "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+          }
+        ]
+      }
+    }
+    }
+  ]
+}
