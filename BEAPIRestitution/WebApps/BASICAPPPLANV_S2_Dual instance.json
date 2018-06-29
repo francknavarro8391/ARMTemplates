@@ -1,0 +1,191 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "AppServicePlanName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the App Service Plan to be created."
+            }
+        },
+        "ControllerWebAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Unique name for the Web App to be used for the controller API."
+            }
+        },
+        "DisplayName": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+                "description": "Tag to group ressources of a same application."
+            }
+        },
+        "CostCenter": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+                "description": "Tag to assign a cost center for billing purpose."
+            }
+        },
+        "Module": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+                "description": "Tag to group multiple ressources composing a same tier in an application."
+            }
+        },
+        "Owner": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+                "description": "Tag email address of user responsible for the resource."
+            }
+        },
+        "Application": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+                "description": "Tag to group all ressources composing an application for all it's modules."
+            }
+        },
+        "Expiration": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+                "description": "Tag to be used to set an expiration date on the resource.."
+            }
+        }
+    },
+    "variables": {    
+        "AutoScaleObjectName":"WeekDaysAutoScale"    
+    },
+    "resources": [
+        {
+            "apiVersion": "2016-03-01",
+            "name": "[Parameters('AppServicePlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "DisplayName":"[Parameters('Application')]",
+                "CostCenter": "[Parameters('CostCenter')]",
+                "Module":"[Parameters('Module')]",
+                "Owner":"[Parameters('Owner')]",
+                "Application": "[Parameters('Application')]",
+                "Expiration":"[Parameters('Expiration')]"
+            },
+            "properties": {
+                "name": "[Parameters('AppServicePlanName')]"
+            },
+            "sku": {
+                "name" : "S2",
+                "tier": "Standard",
+                "size": "S2",
+                "family": "S",
+                "capacity": "2"
+            }
+        },
+        {
+            "apiVersion": "2016-03-01",
+            "name": "[Parameters('ControllerWebAppName')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "DisplayName":"[Parameters('ControllerWebAppName')]",
+                "CostCenter": "[Parameters('CostCenter')]",
+                "Module":"[Parameters('Module')]",
+                "Owner":"[Parameters('Owner')]",
+                "Application": "[Parameters('Application')]",
+                "Expiration":"[Parameters('Expiration')]"
+            },
+            "properties": {
+                "name": "[Parameters('ControllerWebAppName')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverFarms',Parameters('AppServicePlanName'))]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverFarms/',Parameters('AppServicePlanName'))]"
+            ]
+        },
+        {
+            "type": "microsoft.insights/autoscalesettings",
+            "name": "[variables('AutoScaleObjectName')]",
+            "apiVersion": "2014-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "DisplayName":"[Parameters('DisplayName')]",
+                "CostCenter": "[Parameters('CostCenter')]",
+                "Module":"[Parameters('Module')]",
+                "Owner":"[Parameters('Owner')]",
+                "Application": "[Parameters('Application')]",
+                "Expiration":"[Parameters('Expiration')]"
+            },
+            "scale": null,
+            "properties": {
+                "profiles": [
+                    {
+                        "name": "Week-Scale",
+                        "capacity": {
+                            "minimum": "3",
+                            "maximum": "3",
+                            "default": "3"
+                        },
+                        "rules": [],
+                        "recurrence": {
+                            "frequency": "Week",
+                            "schedule": {
+                                "timeZone": "Romance Standard Time",
+                                "days": [
+                                    "Monday",
+                                    "Tuesday",
+                                    "Wednesday",
+                                    "Thursday",
+                                    "Friday"
+                                ],
+                                "hours": [
+                                    6
+                                ],
+                                "minutes": [
+                                    0
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "name": "{\"name\":\"Auto created scale condition\",\"for\":\"Week-Scale\"}",
+                        "capacity": {
+                            "minimum": "2",
+                            "maximum": "2",
+                            "default": "2"
+                        },
+                        "rules": [],
+                        "recurrence": {
+                            "frequency": "Week",
+                            "schedule": {
+                                "timeZone": "Romance Standard Time",
+                                "days": [
+                                    "Monday",
+                                    "Tuesday",
+                                    "Wednesday",
+                                    "Thursday",
+                                    "Friday"
+                                ],
+                                "hours": [
+                                    18
+                                ],
+                                "minutes": [
+                                    0
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "enabled": true,
+                "name": "[variables('AutoScaleObjectName')]",
+                "targetResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('AppServicePlanName'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('AppServicePlanName'))]"
+            ]
+        }
+    ]
+}

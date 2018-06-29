@@ -1,0 +1,226 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "applicationGatewayName": {
+            "type": "string"
+        },
+        "capacity": {
+            "type": "int",
+            "allowedValues": [
+                1
+            ],
+            "defaultValue": 1
+        },
+        "frontEndPort": {
+            "type": "int"
+        },
+        "SubnetName": {
+            "type": "string",
+            "defaultValue": "FrontEndSubnet",
+            "allowedValues": [
+              "BackendSubnet",
+              "FrontEndSubnet"
+            ],
+            "metadata": {
+              "description": "Authorized subnet to be used for virtual machine deployment in Virtual Network"
+            }
+          },
+        "domainNameLabel": {
+            "type": "string"
+        },
+        "DisplayName": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+              "description": "Tag to group ressources of a same application."
+            }
+          },
+          "CostCenter": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+              "description": "Tag to assign a cost center for billing purpose."
+            }
+          },
+          "Module": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+              "description": "Tag to group multiple ressources composing a same tier in an application."
+            }
+          },
+          "Owner": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+              "description": "Tag email address of user responsible for the resource."
+            }
+          },
+          "Application": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+              "description": "Tag to group all ressources composing an application for all it's modules."
+            }
+          },
+          "Expiration": {
+            "type": "string",
+            "defaultValue": "NONE",
+            "metadata": {
+              "description": "Tag to be used to set an expiration date on the resource.."
+            }
+          }
+    },
+    "variables": { 
+        "skusize": "WAF_Medium",
+        "VNETResourfeGroupName": "Management",
+        "virtualNetworkName": "ISOLATED_VNET",
+        "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('SubnetName'))]",
+        
+        "ApplicationGatewayPublicIpAddressName": "[concat(Parameters('applicationGatewayName'),'_','IP1')]",
+        
+        "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses/', Variables('ApplicationGatewayPublicIpAddressName'))]",
+        "applicationGatewayID": "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGatewayName'))]",
+
+        "ApplicationGatewayidleTimeoutInMinutes": "4",
+        "ApplicationGatewayEnableHttp2": "false"
+    },
+    "resources": [
+        {
+            "name": "[parameters('applicationGatewayName')]",
+            "type": "Microsoft.Network/applicationGateways",
+            "apiVersion": "2017-10-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "DisplayName": "[parameters('DisplayName')]",
+                "CostCenter": "[parameters('CostCenter')]",
+                "Module": "[parameters('Module')]",
+                "Owner": "[parameters('Owner')]",
+                "Application": "[parameters('Application')]",
+                "Expiration": "[parameters('Expiration')]"
+              },
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('ApplicationGatewayPublicIpAddressName'))]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "[variables('skuSize')]",
+                    "tier": "WAF",
+                    "capacity": "[parameters('capacity')]"
+                },
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "appGatewayIpConfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendIPConfigurations": [
+                    {
+                        "name": "appGatewayFrontendIP",
+                        "properties": {
+                            "PublicIPAddress": {
+                                "id": "[variables('publicIPRef')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "appGatewayFrontendPort",
+                        "properties": {
+                            "Port": 80
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "appGatewayBackendPool",
+                        "properties": {
+                            "BackendAddresses": []
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "appGatewayBackendHttpSettings",
+                        "properties": {
+                            "Port": 80,
+                            "Protocol": "Http",
+                            "CookieBasedAffinity": "Disabled"
+                        }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "appGatewayHttpListener",
+                        "properties": {
+                            "FrontendIPConfiguration": {
+                                "Id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+                            },
+                            "FrontendPort": {
+                                "Id": "[concat(variables('applicationGatewayID'), '/frontendPorts/appGatewayFrontendPort')]"
+                            },
+                            "Protocol": "Http",
+                            "SslCertificate": null
+                        }
+                    }
+                ],
+                "requestRoutingRules": [
+                    {
+                        "Name": "rule1",
+                        "properties": {
+                            "RuleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpListener')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/appGatewayBackendPool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+                            }
+                        }
+                    }
+                ],
+                "enableHttp2": "[variables('ApplicationGatewayEnableHttp2')]",
+                "sslCertificates": [],
+                "webApplicationFirewallConfiguration": {
+                    "enabled": true,
+                    "firewallMode": "Prevention",
+                    "ruleSetType": "OWASP",
+                    "ruleSetVersion": "3.0"
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('ApplicationGatewayPublicIpAddressName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "DisplayName": "[parameters('DisplayName')]",
+                "CostCenter": "[parameters('CostCenter')]",
+                "Module": "[parameters('Module')]",
+                "Owner": "[parameters('Owner')]",
+                "Application": "[parameters('Application')]",
+                "Expiration": "[parameters('Expiration')]"
+              },
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": "[Variables('ApplicationGatewayidleTimeoutInMinutes')]",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('domainNameLabel')]"
+                }
+            }
+        }
+    ]
+}

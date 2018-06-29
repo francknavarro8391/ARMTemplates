@@ -1,0 +1,39 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "francecentral"
+        },
+        "applicationGatewayName": {
+            "value": "TESTWAF01"
+        },
+        "tier": {
+            "value": "WAF"
+        },
+        "skuSize": {
+            "value": "WAF_Medium"
+        },
+        "capacity": {
+            "value": 2
+        },
+        "frontEndPort": {
+            "value": 80
+        },
+        "subnetName": {
+            "value": "frontendSubnet"
+        },
+        "enableHttp2": {
+            "value": false
+        },
+        "publicIpAddressName": {
+            "value": "TESTWAF01-ip"
+        },
+        "idleTimeoutInMinutes": {
+            "value": 4
+        },
+        "domainNameLabel": {
+            "value": "test991v90"
+        }
+    }
+}
