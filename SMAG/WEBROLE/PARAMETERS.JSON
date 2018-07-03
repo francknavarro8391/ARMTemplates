@@ -5,7 +5,7 @@
     "secretadminUsername": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagprodkeyvault"
         },
         "secretName": "WindowsDefaultAdminUserName"
       }
@@ -13,7 +13,7 @@
     "secretadminPassword": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagprodkeyvault"
         },
         "secretName": "WindowsDefaultAdminPassword"
       }
@@ -21,7 +21,7 @@
     "JoinDomainUsername" : {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagprodkeyvault"
         },
         "secretName": "WindowsJoinDomainUsername"
       }
@@ -29,18 +29,16 @@
     "JoinDomainPassword" : {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagprodkeyvault"
         },
         "secretName": "WindowsJoinDomainPassword"
       }
     },
-    "SmagMasterSourceSecret": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
-        },
-        "secretName": "SmagMasterSourceKey"
-      }
+    "vaultResourceId": {
+      "value": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagprodkeyvault"
+    },
+    "secretUrlWithVersion": {
+      "value": "https://smagprodkeyvault.vault.azure.net/secrets/agreo-fr/1438b4d69e474dd7bd64f546c6ea574e"
     }
   }
 }
