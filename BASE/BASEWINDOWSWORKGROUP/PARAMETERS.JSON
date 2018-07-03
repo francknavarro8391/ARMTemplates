@@ -5,7 +5,7 @@
     "secretadminUsername": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagprodkeyvault"
         },
         "secretName": "WindowsDefaultAdminUserName"
       }
@@ -13,7 +13,7 @@
     "secretadminPassword": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagdevkeyvault"
+          "id": "/subscriptions/62c1a715-33b8-4842-a100-addfd8b7759d/resourceGroups/Management/providers/Microsoft.KeyVault/vaults/smagprodkeyvault"
         },
         "secretName": "WindowsDefaultAdminPassword"
       }
