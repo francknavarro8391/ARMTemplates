@@ -56,7 +56,6 @@
     },
     "CostCenter": {
       "type": "string",
-      "defaultValue": "IT",
       "metadata": {
         "description": "Tag to assign a cost center for billing purpose."
       }
@@ -96,7 +95,7 @@
     "OSDiskName": "[concat(Parameters('vmName'),'_OSDISK')]",
     "DataDisk1Name": "[concat(Parameters('vmName'),'_DATADISK1')]",
     "VNETResourfeGroupName": "Management",
-    "virtualNetworkName": "ISOLATED_VNET",
+    "virtualNetworkName": "SMAG_VNET",
     "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
     "DataDiskCachingPolicy": "ReadWrite",
