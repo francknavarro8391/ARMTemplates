@@ -1,0 +1,112 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "plan_name": {
+            "type": "string"
+        },
+        "plan_publisher": {
+            "type": "string"
+        },
+        "plan_product": {
+            "type": "string"
+        },
+        "plan_promotion_code": {
+            "type": "string"
+        },
+        "password": {
+            "type": "secureString"
+        },
+        "email": {
+            "type": "string"
+        },
+        "firstName": {
+            "type": "string"
+        },
+        "lastName": {
+            "type": "string"
+        },
+        "company": {
+            "type": "string"
+        },
+        "website": {
+            "type": "string"
+        },
+        "acceptMarketingEmails": {
+            "type": "string"
+        },
+        "DisplayName": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to group ressources of a same application."
+            }
+        },
+        "CostCenter": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to assign a cost center for billing purpose."
+            }
+        },
+        "Module": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to group multiple ressources composing a same tier in an application."
+            }
+        },
+        "Owner": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag email address of user responsible for the resource."
+            }
+        },
+        "Application": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to group all ressources composing an application for all it's modules."
+            }
+        },
+        "Expiration": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to be used to set an expiration date on the resource."
+            }
+          }
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-01-01",
+            "name": "[parameters('name')]",
+            "type": "Sendgrid.Email/accounts",
+            "location": "[parameters('location')]",
+            "tags": {
+                "DisplayName": "[parameters('DisplayName')]",
+                "CostCenter": "[parameters('CostCenter')]",
+                "Module": "[parameters('Module')]",
+                "Owner": "[parameters('Owner')]",
+                "Application": "[parameters('Application')]",
+                "Expiration": "[parameters('Expiration')]"
+            },
+            "plan": {
+                "name": "[parameters('plan_name')]",
+                "publisher": "[parameters('plan_publisher')]",
+                "product": "[parameters('plan_product')]",
+                "promotionCode": "[parameters('plan_promotion_code')]"
+            },
+            "properties": {
+                "password": "[parameters('password')]",
+                "acceptMarketingEmails": "[parameters('acceptMarketingEmails')]",
+                "email": "[parameters('email')]",
+                "firstName": "[parameters('firstName')]",
+                "lastName": "[parameters('lastName')]",
+                "company": "[parameters('company')]",
+                "website": "[parameters('website')]"
+            }
+        }
+    ]
+}

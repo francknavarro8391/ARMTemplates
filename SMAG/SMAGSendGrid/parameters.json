@@ -1,0 +1,45 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "value": "SMAGSendGridEmail"
+        },
+        "location": {
+            "value": "WestEurope"
+        },
+        "plan_name": {
+            "value": "free"
+        },
+        "plan_publisher": {
+            "value": "Sendgrid"
+        },
+        "plan_product": {
+            "value": "sendgrid_azure"
+        },
+        "plan_promotion_code": {
+            "value": ""
+        },
+        "password": {
+            "value": "QNRg8ejAMAD2tazQYyq8"
+        },
+        "email": {
+            "value": "eestrayer@smag-group.com"
+        },
+        "firstName": {
+            "value": "Eric"
+        },
+        "lastName": {
+            "value": "ESTRAYER"
+        },
+        "company": {
+            "value": "SMAG"
+        },
+        "website": {
+            "value": "https://www.smag-group.com"
+        },
+        "acceptMarketingEmails": {
+            "value": "0"
+        }
+    }
+}
