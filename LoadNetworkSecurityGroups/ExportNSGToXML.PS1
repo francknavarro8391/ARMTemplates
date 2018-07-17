@@ -1,6 +1,7 @@
 ﻿#
 # Export Selected Network Security Group into an XML File
-#
+# Version 1.1 - Benoît SAUTIERE
+#               Align XML format with import script
 #
 Param(
 [Parameter(Mandatory = $true)]
@@ -43,23 +44,6 @@ If ($CheckXMLPath -eq $True)
             { 
                 Write-Host "Network Security group object $NSGName found in Resource Group $ResourceGroupName."
                 $TemplateNSGRules =  Get-AzureRmNetworkSecurityGroup -Name $NSGName -ResourceGroupName $ResourceGroupName | Get-AzureRmNetworkSecurityRuleConfig
-               #
-               # Extract workspace if is Network Security group connected to Log Analytics Workspace
-               #
-                $workspaceID = (Get-AzureRmDiagnosticSetting -ResourceId (Get-AzureRmNetworkSecurityGroup -Name $NSGName -ResourceGroupName $ResourceGroupName).id).workspaceid
-                If ($workspaceID -ne $null)
-                {
-                    $workspace = Get-AzureRmOperationalInsightsWorkspace | where {$_.resourceid -eq $workspaceid}
-                    $workspacename = $workspace.name
-                    $workspaceresourcegroup = $workspace.ResourceGroupName 
-                    Write-host "Network Security Group $NSGName is connected to Log Analytics instance $($workspace.name) located in resource Group $($workspace.ResourceGroupName)." 
-                }
-                Else
-                {
-                    $workspacename = ""
-                    $workspaceresourcegroup = ""
-                    Write-Host "Network Security Group $NSGName si not connected to a Log Analytics instance."                
-                }
                 #
                 # Parse collection and create XML file
                 #
@@ -67,15 +51,11 @@ If ($CheckXMLPath -eq $True)
                 [System.XML.XMLDocument]$oXMLDocument=New-Object System.XML.XMLDocument 
                 $Declaration = $oXMLDocument.CreateXmlDeclaration("1.0","utf-8",$null)   
                 $oXMLDocument.AppendChild($Declaration)          | out-null   
-                [System.XML.XMLElement]$oXMLRoot=$oXMLDocument.CreateElement("NSG")
-
-                $oXMLRoot.SetAttribute("ID",$NSGName)
-                $oXMLRoot.SetAttribute("OMSWorkspace",$workspacename)
-                $oXMLRoot.SetAttribute("OMSResourceGroup",$workspaceresourcegroup)
+                [System.XML.XMLElement]$oXMLRoot=$oXMLDocument.CreateElement("NSG") 
                 $oXMLDocument.appendChild($oXMLRoot)
                 ForEach ($NSGRule in $TemplateNSGRules)
                 {
-                    Write-Host "Processing rule n°$Processing/$($TemplateNSGRules.count)."
+                    Write-Host "Processing rule n°$Processing/$($TemplateNSGRules.count) - $($NSGRule.name)."
                     [System.XML.XMLElement]$oXMLSystem=$oXMLRoot.appendChild($oXMLDocument.CreateElement("Rule"))
                     $oXMLSystem.SetAttribute("Name",$NSGRule.name)
                     $oXMLSystem.SetAttribute("Priority",$NSGRule.Priority)
