@@ -88,6 +88,18 @@
       "description": "Enable Accelerated Networking support for VM supporting the feature."
       }
     },
+    "AzureZone": {
+      "type": "string",
+      "defaultValue": "1",
+      "allowedValues": [
+        "1",
+        "2",
+        "3"
+      ],
+      "metadata": {
+        "description": "Azure zone where virtual machine will be deployed in the Azure region (supporting availability zone)."
+      }
+    },
     "DisplayName": {
       "type": "string",
       "metadata": {
@@ -131,6 +143,10 @@
     "nicName": "[concat(Parameters('vmName'),'_NIC1')]",
     "ipconfig1_nic1": "[concat(Variables('nicName'),'_IP1')]",
     "OSDiskName": "[concat(Parameters('vmName'),'_OSDISK')]",
+    "DataDisk1Name":"[concat(Parameters('vmName'),'_DATADISK1')]",
+    "DataDisk2Name":"[concat(Parameters('vmName'),'_DATADISK2')]",
+    "DataDisk3Name":"[concat(Parameters('vmName'),'_DATADISK3')]",
+    "DataDisk4Name":"[concat(Parameters('vmName'),'_DATADISK4')]",
     "VNETResourfeGroupName": "Management",
     "virtualNetworkName": "SMAG_VNET",
     "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
@@ -199,6 +215,9 @@
   "apiVersion": "2016-04-30-preview",
   "type": "Microsoft.Compute/virtualMachines",
   "name": "[parameters('vmName')]",
+  "zones": [
+    "[parameters('AzureZone')]"
+  ],
   "location": "[resourceGroup().location]",
   "tags": {
     "DisplayName": "[parameters('DisplayName')]",
@@ -233,7 +252,45 @@
             "managedDisk": {
                 "storageAccountType": "[parameters('DiskType')]"
             }
-        }
+        },
+        "dataDisks": [
+          {
+            "lun": 0,
+            "name": "[variables('DataDisk1Name')]",
+            "createOption": "FromImage",
+            "caching": "[variables('DataDiskCachingPolicy')]",
+            "managedDisk": {
+              "storageAccountType": "[parameters('DiskType')]"
+            }
+          },
+          {
+            "lun": 1,
+            "name": "[variables('DataDisk2Name')]",
+            "createOption": "FromImage",
+            "caching": "[variables('DataDiskCachingPolicy')]",
+            "managedDisk": {
+              "storageAccountType": "[parameters('DiskType')]"
+            }
+          },
+          {
+            "lun": 2,
+            "name": "[variables('DataDisk3Name')]",
+            "createOption": "FromImage",
+            "caching": "[variables('DataDiskCachingPolicy')]",
+            "managedDisk": {
+              "storageAccountType": "[parameters('DiskType')]"
+            }
+          },
+          {
+            "lun": 3,
+            "name": "[variables('DataDisk4Name')]",
+            "createOption": "FromImage",
+            "caching": "[variables('DataDiskCachingPolicy')]",
+            "managedDisk": {
+              "storageAccountType": "[parameters('DiskType')]"
+            }
+          }
+        ]
     },
   "networkProfile": {
     "networkInterfaces": [
