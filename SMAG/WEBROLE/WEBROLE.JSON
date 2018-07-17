@@ -16,7 +16,7 @@
     },
     "SubnetName": {
       "type": "string",
-      "defaultValue": "BackendSubnet",
+      "defaultValue": "FrontEndSubnet",
       "allowedValues": [
         "BackendSubnet",
         "FrontEndSubnet"
@@ -100,7 +100,18 @@
         "description": "Url of the certificate in Key Vault - the url must be to a base64 encoded secret, not a key or cert: https://<vaultEndpoint>/secrets/<secretName>/<secretVersion>"
       }
     },
-
+    "AzureZone": {
+      "type": "string",
+      "defaultValue": "1",
+      "allowedValues": [
+        "1",
+        "2",
+        "3"
+      ],
+      "metadata": {
+        "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version. Allowed values: 2016-datacenter, 2012-R2-Datacenter."
+      }
+    },
     "DisplayName": {
       "type": "string",
       "metadata": {
@@ -144,6 +155,7 @@
     "nicName": "[concat(Parameters('vmName'),'_NIC1')]",
     "ipconfig1_nic1": "[concat(Variables('nicName'),'_IP1')]",
     "OSDiskName": "[concat(Parameters('vmName'),'_OSDISK')]",
+    "DataDisk1Name":"[concat(Parameters('vmName'),'_DATADISK1')]",
     "VNETResourfeGroupName": "Management",
     "virtualNetworkName": "SMAG_VNET",
     "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
@@ -212,6 +224,9 @@
   "apiVersion": "2016-04-30-preview",
   "type": "Microsoft.Compute/virtualMachines",
   "name": "[parameters('vmName')]",
+  "zones": [
+    "[parameters('AzureZone')]"
+  ],
   "location": "[resourceGroup().location]",
   "tags": {
     "DisplayName": "[parameters('DisplayName')]",
@@ -255,11 +270,22 @@
         },
         "osDisk": {
             "name": "[Variables('OSDiskName')]",
-            "createOption": "FromImage",
+            "createOption": "FromImage",          
             "managedDisk": {
                 "storageAccountType": "[parameters('DiskType')]"
             }
-        }
+        },
+        "dataDisks": [
+          {
+            "lun": 0,
+            "name": "[variables('DataDisk1Name')]",
+            "createOption": "FromImage",
+            "caching": "[variables('DataDiskCachingPolicy')]",
+            "managedDisk": {
+              "storageAccountType": "[parameters('DiskType')]"
+            }
+          }
+        ]
     },
   "networkProfile": {
     "networkInterfaces": [
