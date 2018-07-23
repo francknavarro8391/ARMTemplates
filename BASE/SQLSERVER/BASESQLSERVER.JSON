@@ -16,10 +16,9 @@
     },
     "ouPath" : {
       "type" : "string",
-      "defaultValue": "ou=dev,ou=servers,dc=tempdomaine,dc=local",
       "allowedValues": [
-        "ou=dev,ou=servers,dc=tempdomaine,dc=local",
-        "ou=production,ou=servers,dc=tempdomaine,dc=local"
+        "OU=REPORT,ou=SERVEURS PREPROD,dc=NEOPROD2,dc=LOCAL",
+        "ou=BDD,ou=SERVEURS PROD,dc=NEOPROD2,dc=LOCAL"
       ],
       "metadata" : {
         "description" : "Organizational Unit to create the computer account"
@@ -39,7 +38,6 @@
     },
     "imageOffer" : {
       "type" : "string",
-      "defaultValue": "SQL2016SP2-WS2016",
       "allowedValues": [
         "SQL2008R2SP3-WS2008R2SP1",
         "SQL2016SP2-WS2016",
@@ -51,7 +49,6 @@
     },
     "sqlImageSku" : {
       "type" : "string",
-      "defaultValue": "Standard",
       "allowedValues": [
         "Enterprise",
         "Express",
@@ -62,7 +59,6 @@
         "description" : "Windows + SQL Server instance to be deployed (limited list)"
       }
     },
-
     "sqlAuthenticationLogin": {
       "type": "securestring",
       "metadata": {
@@ -112,6 +108,17 @@
       "metadata": {
         "description": "Location for all resources."
       }
+    },    
+    "AzureZone": {
+      "type": "string",
+      "allowedValues": [
+        "1",
+        "2",
+        "3"
+      ],
+      "metadata": {
+        "description": "Azure Zone on witch virtual machine will be deployed in Azure region."
+      }
     },
     "SubnetName": {
       "type": "string",
@@ -132,10 +139,12 @@
     },
     "vmsize" : {
       "type" : "string",  
-      "defaultValue": "Standard_D4_v3",
+      "defaultValue": "Standard_D4S_v3",
       "allowedValues": [
-        "Standard_D4_v3",
-        "Standard_D8_v3"
+        "Standard_D4S_v3",
+        "Standard_D8S_v3",
+        "Standard_D16S_v3",
+        "Standard_D2S_v3"
       ],
       "metadata": {
         "description": "Virtual machine size to be deployed (limited to a VM list)."
@@ -143,7 +152,7 @@
     },
     "DiskType": {
       "type" : "string",
-      "defaultValue": "Standard_LRS",
+      "defaultValue": "Premium_LRS",
       "allowedValues": [
         "Standard_LRS",
         "Premium_LRS"
@@ -160,7 +169,6 @@
     },
     "CostCenter": {
       "type": "string",
-      "defaultValue": "IT",
       "metadata": {
         "description": "Tag to assign a cost center for billing purpose."
       }
@@ -200,10 +208,10 @@
     "DataDisk2Name": "[concat(Parameters('vmName'),'_DATADISK2')]",
     "DataDisk3Name": "[concat(Parameters('vmName'),'_DATADISK3')]",
     "VNETResourfeGroupName": "Management",
-    "virtualNetworkName": "ISOLATED_VNET",
+    "virtualNetworkName": "SMAG_VNET",
     "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
-    "domainToJoin": "TEMPDOMAINE.LOCAL",
+    "domainToJoin": "NEOPROD2.LOCAL",
     "JoindomainJoinOptions" : 3,
     "DataDiskCachingPolicy": "none",
     "BootDiagnosticsSTorageAccount": "https://smagvmdiags.blob.core.windows.net"
@@ -214,6 +222,9 @@
       "type": "Microsoft.Compute/disks",
       "name": "[variables('DataDisk1Name')]",
       "location": "[resourceGroup().location]",
+      "zones": [
+        "[parameters('AzureZone')]"
+      ],
       "tags": {
         "DisplayName": "[parameters('DisplayName')]",
         "CostCenter": "[parameters('CostCenter')]",
@@ -237,6 +248,9 @@
     "type": "Microsoft.Compute/disks",
     "name": "[variables('DataDisk2Name')]",
     "location": "[resourceGroup().location]",
+    "zones": [
+      "[parameters('AzureZone')]"
+    ],
     "tags": {
       "DisplayName": "[parameters('DisplayName')]",
       "CostCenter": "[parameters('CostCenter')]",
@@ -260,6 +274,9 @@
     "type": "Microsoft.Compute/disks",
     "name": "[variables('DataDisk3Name')]",
     "location": "[resourceGroup().location]",
+    "zones": [
+      "[parameters('AzureZone')]"
+    ],
     "tags": {
       "DisplayName": "[parameters('DisplayName')]",
       "CostCenter": "[parameters('CostCenter')]",
@@ -369,6 +386,9 @@
   "apiVersion": "2016-04-30-preview",
   "type": "Microsoft.Compute/virtualMachines",
   "name": "[parameters('vmName')]",
+  "zones": [
+    "[parameters('AzureZone')]"
+  ],
   "location": "[resourceGroup().location]",
   "tags": {
     "DisplayName": "[parameters('DisplayName')]",
