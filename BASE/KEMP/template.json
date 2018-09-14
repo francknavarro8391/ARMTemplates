@@ -1,0 +1,216 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineName": {
+            "type": "string"
+        },
+          "AzureZone": {
+            "type": "string",
+            "allowedValues": [
+              "1",
+              "2",
+              "3"
+            ],
+            "metadata": {
+              "description": "Azure Zone on witch virtual machine will be deployed in Azure region."
+            }
+          },
+          "DisplayName": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to group ressources of a same application."
+            }
+          },
+          "CostCenter": {
+            "type": "string",
+            "defaultValue": "IT",
+            "metadata": {
+              "description": "Tag to assign a cost center for billing purpose."
+            }
+          },
+          "Module": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to group multiple ressources composing a same tier in an application."
+            }
+          },
+          "Owner": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag email address of user responsible for the resource."
+            }
+          },
+          "Application": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to group all ressources composing an application for all it's modules."
+            }
+          },
+          "Expiration": {
+            "type": "string",
+            "metadata": {
+              "description": "Tag to be used to set an expiration date on the resource.."
+            }
+          },
+        "virtualMachineSize" : {
+            "type" : "string",  
+            "defaultValue": "Standard_D2s_v3",
+            "allowedValues": [
+              "Standard_D2s_v3",
+              "Standard_D4s_v3"
+            ],
+            "metadata": {
+              "description": "Virtual machine size to be deployed (limited to a VM list)."
+            }
+          },
+          "KempSKU" : {
+            "type" : "string",  
+            "defaultValue": "vlm-200-hrl-v3",
+            "allowedValues": [
+              "freeloadmaster",     
+              "vlm-10g-hrl-v3",     
+              "vlm-200-hrl-v3",     
+              "vlm-2000-hrl-v3",    
+              "vlm-500-waf-hrl-v3", 
+              "vlm-5000-hrl-v3"    
+            ],
+            "metadata": {
+              "description": "Kemp SKU Product list"
+            }
+          },
+        "adminUsername": {
+            "type": "securestring",
+            "metadata" : {
+                "description" : "Secret URI for the Default Kemp login appliance."
+              }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata" : {
+                "description" : "Secret URI for the default Kemp Password appliance."
+              }
+        },
+        "subnetName": {
+            "type": "string",
+            "defaultValue": "DMZSubnet",
+            "allowedValues": [
+                "DMZSubnet",
+                "FrontendSubnet",
+                "BackendSubnet"
+              ],
+            "metadata": {
+                "description": "Authorized subnet to be used for virtual machine deployment in Virtual Network"
+              }
+        }
+    },
+    "variables": {
+        "OSDiskName": "[concat(Parameters('virtualMachineName'),'_OSDISK')]",
+        "nicName": "[concat(Parameters('virtualMachineName'),'_NIC1')]",
+        "ipconfig1_nic1": "[concat(Parameters('virtualMachineName'),'_IP1')]",
+        "diagnosticsStorageAccountName" : "smagvmdiags",
+        "VNETResourfeGroupName": "Management",
+        "virtualNetworkName": "SMAG_VNET",
+        "vnetID": "[resourceId(variables('VNETResourfeGroupName'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('virtualMachineName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2018-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "DisplayName": "[parameters('DisplayName')]",
+                "CostCenter": "[parameters('CostCenter')]",
+                "Module": "[parameters('Module')]",
+                "Owner": "[parameters('Owner')]",
+                "Application": "[parameters('Application')]",
+                "Expiration": "[parameters('Expiration')]"
+              },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', Variables('nicName'))]"
+            ],
+            "properties": {
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachineName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "kemptech",
+                        "offer": "vlm-azure",
+                        "sku": "[parameters('KempSKU')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "fromImage",
+                        "name": "[Variables('OSDiskName')]",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        }
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https://', variables('diagnosticsStorageAccountName'), '.blob.core.windows.net/')]"
+                    }
+                }
+            },
+            "zones": [
+                "[parameters('AzureZone')]"
+            ],
+            "plan": {
+                "name":"[parameters('KempSKU')]",
+                "publisher": "kemptech",
+                "product": "vlm-azure"
+            }
+        },
+        {
+            "name": "[Variables('nicName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "DisplayName": "[parameters('DisplayName')]",
+                "CostCenter": "[parameters('CostCenter')]",
+                "Module": "[parameters('Module')]",
+                "Owner": "[parameters('Owner')]",
+                "Application": "[parameters('Application')]",
+                "Expiration": "[parameters('Expiration')]"
+              },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[variables('ipconfig1_nic1')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "adminUsername": {
+            "type": "string",
+            "value": "[parameters('adminUsername')]"
+        }
+    }
+}
